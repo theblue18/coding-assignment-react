@@ -9,3 +9,4 @@ export type Ticket = {
   assigneeId: null | number;
   completed: boolean;
 };
+

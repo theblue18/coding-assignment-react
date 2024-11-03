@@ -1,0 +1,23 @@
+/*
+ * Replace this with your own classes
+ *
+ * e.g.
+ * .container {
+ * }
+*/
+.backBtnRow{
+    margin-bottom: 24px;
+}
+
+.container {
+    padding: 24px;
+}
+.leftCol{
+    background-color: rgb(220, 220, 220);
+}
+.detailCol{
+    padding: 12px
+}
+.unassignedTextBtn{
+    color: red;
+}

@@ -1,38 +1,62 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Ticket, User } from '@acme/shared-models';
-
+import { User } from '@acme/shared-models';
 import styles from './app.module.css';
 import Tickets from './tickets/tickets';
+import { getAllUsersApi } from './apis/user';
+import { message } from 'antd';
+import { useDispatch } from 'react-redux';
+import { getUsers, setUsers } from './reducers/userSlice';
+import { useAppSelector } from './stores/hooks';
+import TicketDetails from './ticket-details/ticket-details';
 
+/**
+ * Main application component that sets up routes and fetches user data on initial load.
+ *
+ * @component
+ * @returns {JSX.Element} The root component of the application.
+ */
 const App = () => {
-  const [tickets, setTickets] = useState([] as Ticket[]);
-  const [users, setUsers] = useState([] as User[]);
+  // Dispatch function for interacting with the Redux store.
+  const dispatch = useDispatch();
 
-  // Very basic way to synchronize state with server.
-  // Feel free to use any state/fetch library you want (e.g. react-query, xstate, redux, etc.).
+  // Selector to retrieve user data from the Redux store.
+  const users = useAppSelector(getUsers);
+
+  // Message API for displaying notifications within the component.
+  const [_, contextHolder] = message.useMessage();
+
+  /**
+   * Fetches user data from the API and updates the Redux store if the request is successful.
+   * Displays an error message if the request fails.
+   */
   useEffect(() => {
-    async function fetchTickets() {
-      const data = await fetch('/api/tickets').then();
-      setTickets(await data.json());
-    }
-
     async function fetchUsers() {
-      const data = await fetch('/api/users').then();
-      setUsers(await data.json());
+      const data = await getAllUsersApi();
+      if (!data.success) {
+        // Display an error message if fetching users fails.
+        message.error(data.message);
+        return;
+      }
+      // Update users in the Redux store if data retrieval is successful.
+      dispatch(setUsers(data.data as User[]));
     }
 
-    fetchTickets();
-    fetchUsers();
-  }, []);
+    // Only fetch users if they are not already loaded in the store.
+    if (users === undefined) {
+      fetchUsers();
+    }
+  }, [users]);
 
   return (
     <div className={styles['app']}>
       <h1>Ticketing App</h1>
+      {contextHolder}
       <Routes>
-        <Route path="/" element={<Tickets tickets={tickets} />} />
-        {/* Hint: Try `npx nx g component TicketDetails --project=client --no-export` to generate this component  */}
-        <Route path="/:id" element={<h2>Details Not Implemented</h2>} />
+        {/* Route for the main ticket listing page */}
+        <Route path="/" element={<Tickets />} />
+        {/* Route for the ticket details page with dynamic ticket ID */}
+        <Route path="/:id" element={<TicketDetails />} />
       </Routes>
     </div>
   );
